@@ -7,13 +7,16 @@
     "            <dir>/<sampleType>__<region>_<optionlabel>/<eta>/<dataset>_<eta><option>_<variation>.root,",
     "            dataset = the name of the data file the prediction ran on, without .root.",
     "signals:    per signal model, the directory of the weighted step 1 files (python/Weight.py of",
-    "            TupleAnalysis) and the file name, with {mass} in GeV."
+    "            TupleAnalysis) and the file name, with {mass} in GeV.",
+    "luminosity: label of the plots (DrawDatacards.py, DrawCompareSignal.py, Significance.py): value in fb^-1",
+    "            and centre-of-mass energy. The signal files must be weighted with the same luminosity."
   ],
   "background": {
     "dir": "../massSpectrum_bckgPrediction/outputHist",
     "dataset": "JetMET2024C",
     "sampleType": "data2024"
   },
+  "luminosity": {"value_fb": 109, "energy": "13.6 TeV"},
   "signals": {
     "gluino": {"dir": "../output", "pattern": "Gluino_Run3_MET_madgraph_{mass}_weighted.root"},
     "stop":   {"dir": "../output", "pattern": "Stop_Run3_MET_madgraph_{mass}_weighted.root"},

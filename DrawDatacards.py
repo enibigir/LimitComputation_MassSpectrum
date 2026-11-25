@@ -94,6 +94,8 @@ parser.add_option('--onlyEta1', action='store_true', dest='onlyEta1', default=Fa
 parser.add_option('--signal', dest='signal', default='gluino',
                   type='choice', choices=['gluino', 'stop', 'stau'],
                   help='Must match the generation and run scripts: gluino, stop or stau.')
+parser.add_option('--paths', dest='paths', default=None,
+                  help="paths file, for the luminosity label (default: cfg/paths.json)")
 (options, args) = parser.parse_args()
 
 if options.splitEta and options.onlyEta1:
@@ -122,7 +124,9 @@ LIMITS_BASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Limits')
 
 # Labels drawn above the frame
 CMS_TEXT  = r'$\mathit{Private\ Work\ (CMS\ data)}$'
-LUMI_TEXT = r'109 fb$^{-1}$ (13.6 TeV)'
+# Luminosity label, from cfg/paths.json (or --paths)
+import paths
+LUMI_TEXT = paths.load(options.paths).lumi_text_mpl()
 
 # NNLO+NNLL theoretical cross sections at 13.6 TeV:
 # { mass [GeV] : (cross section [pb], relative uncertainty) }

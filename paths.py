@@ -1,6 +1,8 @@
-"""Paths of the inputs of CreateDatacards.py, read from one JSON file (default: cfg/paths.json).
+"""Inputs of CreateDatacards.py and luminosity of the plots, read from one JSON file
+(default: cfg/paths.json).
 
-CreateDatacards.py and the driver take --paths FILE to read another one ($LIMIT_PATHS too).
+CreateDatacards.py, the plotting scripts and the driver take --paths FILE to read another one
+($LIMIT_PATHS too).
 Relative paths are taken from the directory of this repository, so the default file works when
 the repository sits inside TupleAnalysis, next to massSpectrum_bckgPrediction. $VARIABLES and ~
 are expanded.
@@ -9,6 +11,7 @@ are expanded.
     P = paths.load()              # or paths.load(options.paths)
     P.bkg_dir, P.bkg_dataset, P.bkg_sample_type
     P.signal_file("gluino", 2000)
+    P.lumi_text_mpl(), P.lumi_text_root()   # "109 fb$^{-1}$ (13.6 TeV)", "109 fb^{-1} (13.6 TeV)"
 """
 import json
 import os
@@ -53,10 +56,29 @@ class Paths(object):
                 raise PathsError("{}: signals.{}.pattern must hold {{mass}}".format(source, name))
             self.signals[name] = (resolve(need(s, "dir", str, "signals.{}.".format(name))), pattern)
 
+        # Luminosity of the plot labels: optional, the 2024 dataset by default
+        lumi = doc.get("luminosity", {})
+        if not isinstance(lumi, dict):
+            raise PathsError("{}: 'luminosity' must be an object".format(source))
+        self.lumi_fb = lumi.get("value_fb", 109)
+        self.energy = lumi.get("energy", "13.6 TeV")
+        if isinstance(self.lumi_fb, bool) or not isinstance(self.lumi_fb, (int, float)) or self.lumi_fb <= 0:
+            raise PathsError("{}: luminosity.value_fb must be a positive number".format(source))
+        if not isinstance(self.energy, str):
+            raise PathsError("{}: luminosity.energy must be a string".format(source))
+
     def bkg_input_dir(self, region, optionlabel, eta_dir):
         """<dir>/<sampleType>__<region>_<optionlabel>/<eta>/, as filed by LaunchBkgPred.py."""
         return os.path.join(self.bkg_dir, "{}__{}_{}".format(self.bkg_sample_type, region, optionlabel),
                             eta_dir)
+
+    def lumi_text_mpl(self):
+        """Luminosity label for matplotlib (mathtext)."""
+        return r"{:g} fb$^{{-1}}$ ({})".format(self.lumi_fb, self.energy)
+
+    def lumi_text_root(self):
+        """Luminosity label for ROOT (TLatex)."""
+        return "{:g} fb^{{-1}} ({})".format(self.lumi_fb, self.energy)
 
     def signal_file(self, signal, mass):
         if signal not in self.signals:

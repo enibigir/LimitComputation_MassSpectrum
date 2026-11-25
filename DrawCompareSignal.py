@@ -79,7 +79,8 @@ LIMITS_BASE    = os.path.join(BASE_DIR, 'Limits')
 OUTDIR_DEFAULT = os.path.join(BASE_DIR, 'Results')
 
 # Labels drawn above the frame
-LUMI_TEXT = r'109 fb$^{-1}$ (13.6 TeV)'
+# Luminosity label: set in main() from cfg/paths.json (or --paths)
+LUMI_TEXT = None
 CMS_TEXT  = r'$\mathit{Private\ Work\ (CMS\ data)}$'
 
 # Eta configurations: (key, etaLabel in the file names, legend label, colour, marker)
@@ -505,7 +506,13 @@ def main():
                       help="Plot the cut-and-count limits instead of the shape ones.")
     parser.add_option('--noVLines', action='store_false', dest='vlines', default=True,
                       help="Do not draw the vertical exclusion lines.")
+    parser.add_option('--paths', dest='paths', default=None,
+                      help="paths file, for the luminosity label (default: cfg/paths.json)")
     (opts, _) = parser.parse_args()
+
+    import paths
+    global LUMI_TEXT
+    LUMI_TEXT = paths.load(opts.paths).lumi_text_mpl()
 
     signals = [s.strip() for s in opts.signals.split(',') if s.strip()]
     for s in signals:

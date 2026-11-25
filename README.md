@@ -42,6 +42,11 @@ repository: the defaults assume it sits inside TupleAnalysis, next to
   GeV) of the weighted signal files, written by `python/Weight.py` of
   TupleAnalysis with the luminosity of the data used (`--lumi`). The mass
   points are in `SIGNAL_CONFIG`.
+- `luminosity`: the label of the plots of `DrawDatacards.py`,
+  `DrawCompareSignal.py` and `Significance.py`, `{"value_fb": 109, "energy":
+  "13.6 TeV"}` (the default when the key is absent). These scripts take
+  `--paths` too; the driver passes it to the `gen` and `draw` steps. It is only
+  a label: the signal files must be weighted with the same luminosity.
 
 ## Configurations
 

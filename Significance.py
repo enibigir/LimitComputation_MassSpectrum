@@ -74,7 +74,13 @@ parser.add_option('--optionLabel', dest='optionlabel', default='',
                        'one of the CONFIGURATION section).')
 parser.add_option('--plotOnly', action='store_true', dest='plotOnly', default=False,
                   help='Do not run Combine: read the existing result trees and redraw.')
+parser.add_option('--paths', dest='paths', default=None,
+                  help="paths file, for the luminosity label (default: cfg/paths.json)")
 (options, args) = parser.parse_args()
+
+# Luminosity label, from cfg/paths.json (or --paths)
+import paths
+LUMI_TEXT = paths.load(options.paths).lumi_text_root()
 
 if options.splitEta and options.onlyEta1:
     parser.error('--splitEta and --onlyEta1 are mutually exclusive')
@@ -285,7 +291,7 @@ if __name__ == '__main__':
     latex.SetTextFont(42)
     latex.SetTextSize(0.04)
 
-    latex2 = TLatex(0.73, 0.96, "109 fb^{-1} (13.6 TeV)")
+    latex2 = TLatex(0.73, 0.96, LUMI_TEXT)
     latex2.SetNDC()
     latex2.SetTextFont(42)
     latex2.SetTextSize(0.04)
