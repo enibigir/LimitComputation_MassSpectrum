@@ -1,0 +1,22 @@
+{
+  "_comment": [
+    "Inputs of CreateDatacards.py, read by paths.py (CreateDatacards.py and the driver take --paths FILE).",
+    "Relative paths are taken from this repository: the defaults assume it sits inside TupleAnalysis, next to",
+    "massSpectrum_bckgPrediction. $VARIABLES and ~ are expanded. No production version in the names.",
+    "background: the predictions of massSpectrum_bckgPrediction. dir = its output_dir; the files are",
+    "            <dir>/<sampleType>__<region>_<optionlabel>/<eta>/<dataset>_<eta><option>_<variation>.root,",
+    "            dataset = the name of the data file the prediction ran on, without .root.",
+    "signals:    per signal model, the directory of the weighted step 1 files (python/Weight.py of",
+    "            TupleAnalysis) and the file name, with {mass} in GeV."
+  ],
+  "background": {
+    "dir": "../massSpectrum_bckgPrediction/outputHist",
+    "dataset": "JetMET2024C",
+    "sampleType": "data2024"
+  },
+  "signals": {
+    "gluino": {"dir": "../output", "pattern": "Gluino_Run3_MET_madgraph_{mass}_weighted.root"},
+    "stop":   {"dir": "../output", "pattern": "Stop_Run3_MET_madgraph_{mass}_weighted.root"},
+    "stau":   {"dir": "../output", "pattern": "Stau_Run3_MET_{mass}_weighted.root"}
+  }
+}

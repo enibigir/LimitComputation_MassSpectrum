@@ -62,6 +62,8 @@ parser.add_option('--optionLabel', dest='optionLabels', default='',
                        "(default: all those of OPTION_LABELS).")
 parser.add_option('--unblind', action='store_true', dest='unblind', default=False,
                   help="Use the observed data: passed to the gen and draw steps.")
+parser.add_option('--paths', dest='paths', default=None,
+                  help="paths file of CreateDatacards.py (default: its cfg/paths.json)")
 parser.add_option('--dryRun', action='store_true', dest='dryRun', default=False,
                   help="Print the commands without running them. The scripts are "
                        "not modified.")
@@ -227,6 +229,8 @@ def main():
                             step_flags = list(flags) + ['--signal', sig]
                             if options.unblind and st in UNBLIND_STEPS:
                                 step_flags.append('--unblind')
+                            if options.paths and st == 'gen':
+                                step_flags += ['--paths', os.path.abspath(options.paths)]
                             run_step(STEP_SCRIPTS[st], step_flags, options.dryRun)
                     except subprocess.CalledProcessError as e:
                         print("ERROR: step '{}' failed with status {} for {} / {} -> next".format(st, e.returncode, sig, desc))

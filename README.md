@@ -22,14 +22,26 @@ The scripts can be launched from any directory: they read and write the
 
 ## Inputs
 
-Only `CreateDatacards.py` reads the analysis inputs. Their locations are
-hardcoded at the top of that script and must be adapted:
+Only `CreateDatacards.py` reads the analysis inputs. Their locations are in
+`cfg/paths.json` (read by `paths.py`; `--paths FILE` reads another file, for
+`CreateDatacards.py` and for the driver). Relative paths are taken from this
+repository: the defaults assume it sits inside TupleAnalysis, next to
+`massSpectrum_bckgPrediction`. No name carries a production version.
 
-- `BASE_SIGNAL_DIR`: signal mass histograms, one file per mass point
-  (see `SIGNAL_CONFIG` for the file names and mass points);
-- `BASE_BKG_DIR`: background prediction, one file per systematic variation,
-  named `JetMET2024_V<version>_<eta><option>_<variation>.root`
-  (see `BKG_FILE_SUFFIX`).
+- `background`: the predictions of
+  [massSpectrum_bckgPrediction](https://github.com/enibigir/massSpectrum_bckgPrediction)
+  (branch `no-version`), one file per systematic variation (see
+  `BKG_FILE_SUFFIX`), in
+  `<dir>/<sampleType>__<regionBckg>_<optionlabel>/<eta>/<dataset>_<eta><option>_<variation>.root`.
+  `dir` is the `output_dir` of that repository, `dataset` the name of the data
+  file the prediction ran on (`JetMET2024C`), `sampleType` its sample type
+  (`data2024`). The datacards read the search region (`regionBckg = 9fp10`):
+  run its `LaunchBkgPred.py` with `runSR = 1` and `runVR = 0`, since with both
+  set it files the outputs under `8fp9`.
+- `signals`: per signal model, the directory and the name (with `{mass}` in
+  GeV) of the weighted signal files, written by `python/Weight.py` of
+  TupleAnalysis with the luminosity of the data used (`--lumi`). The mass
+  points are in `SIGNAL_CONFIG`.
 
 ## Configurations
 

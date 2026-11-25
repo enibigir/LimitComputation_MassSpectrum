@@ -22,11 +22,12 @@ Eta configurations (--splitEta and --onlyEta1 are mutually exclusive)
                   1 < |eta| < 2.4 ('Eta1_2p4')    etaLabel = 'split_Eta1_Eta1_2p4'
 
 Inputs
-    signal        <BASE_SIGNAL_DIR><dir><pattern>, one file per mass point
-                  (see SIGNAL_CONFIG)
+    The paths are in cfg/paths.json (or the file given with --paths), see paths.py.
+    signal        <signals.<signal>.dir>/<signals.<signal>.pattern>, one file per
+                  mass point (mass points: SIGNAL_CONFIG)
     background    one file per variation (see BKG_FILE_SUFFIX), in
-                  <BASE_BKG_DIR>data2024_V<version>__<regionBckg>_<optionlabel>/<etaDir>/
-                  and named JetMET2024_V<version>_<eta><option>_<variation>.root
+                  <background.dir>/<sampleType>__<regionBckg>_<optionlabel>/<etaDir>/
+                  and named <background.dataset>_<eta><option>_<variation>.root
 
 Output directory
     <DATACARDS_BASE>/<signal>/shape_<regionBckg>_<etaLabel>_<optionlabel>/
@@ -86,6 +87,8 @@ parser.add_option('--signal', dest='signal', default='gluino',
 parser.add_option('--unblind', action='store_true', dest='unblind', default=False,
                   help='Use the observed mass spectrum as data. By default the data are '
                        'replaced by the nominal background prediction (blinded).')
+parser.add_option('--paths', dest='paths', default=None,
+                  help="paths file (default: cfg/paths.json)")
 (options, args) = parser.parse_args()
 
 if options.splitEta and options.onlyEta1:
@@ -100,7 +103,6 @@ unblind       = options.unblind
 # ---------------------------------------------------------------------------
 ## CONFIGURATION
 # ---------------------------------------------------------------------------
-versionData = '12p35'     # version tag of the background prediction files
 regionBckg  = '9fp10'     # region tag, part of histogram and directory names
 channel     = 'Ch2024'    # base name of the Combine bins
 
@@ -119,39 +121,26 @@ optionlabelForFile = '_SigmaPtoverPt_0p5_EoP_0p1'
 # Datacards/ directory next to this script
 DATACARDS_BASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Datacards')
 
-# Root of the signal histogram files
-BASE_SIGNAL_DIR = '/safe/ui3_1/cms/gcoulon/CMSSW_15_0_13_patch1/src/TupleAnalysis/output/'
+# Input files: background predictions and signal files, from cfg/paths.json
+# (or --paths), see paths.py
+import paths
+PATHS = paths.load(options.paths)
 
-# Root of the background prediction files
-BASE_BKG_DIR = '/safe/ui3_1/cms/gcoulon/CMSSW_15_0_13_patch1/src/TupleAnalysis/macros/'
-
-# Per-signal configuration:
-#   dir     : directory of the signal histogram files
-#   pattern : file name, with {mass} in GeV and {ver} = 'version'
-#   version : version tag of the signal files
+# Per-signal configuration (the files are in cfg/paths.json):
 #   label   : prefix of the Combine sample name, '<label><mass>_2024'
 #   masses  : mass points [GeV]
 # RunDatacards runs on the datacards it finds, so it holds no copy of
 # these lists.
 SIGNAL_CONFIG = {
     'gluino': {
-        'dir'     : BASE_SIGNAL_DIR + 'Gluino_V19/',
-        'pattern' : 'Gluino_Run3_MET_madgraph_{mass}_V{ver}_weighted.root',
-        'version' : '19p12',
         'label'   : 'Gluino',
         'masses'  : [1100, 1200, 1300, 1400, 1600, 1800, 2000, 2200, 2400, 2600],
     },
     'stop': {
-        'dir'     : BASE_SIGNAL_DIR + 'Stop_V21/',
-        'pattern' : 'Stop_Run3_MET_madgraph_{mass}_V{ver}_weighted.root',
-        'version' : '21p0',
         'label'   : 'Stop',
         'masses'  : [700, 800, 900, 1000, 1200, 1400, 1600, 1800, 2000, 2200, 2400, 2600],
     },
     'stau': {
-        'dir'     : BASE_SIGNAL_DIR + 'Stau_V20/',
-        'pattern' : 'Stau_Run3_MET_{mass}_V{ver}_weighted.root',
-        'version' : '20p0',
         'label'   : 'Stau',
         'masses'  : [247, 308, 432, 557, 651, 745, 871, 1029, 1218, 1409, 1599],
     },
@@ -177,7 +166,7 @@ BKG_SYST_MAP = {
 }
 
 # Background prediction files: key -> suffix of the file name
-# (JetMET2024_V<version>_<eta><option>_<suffix>.root). 'obs' and 'nominal'
+# (<dataset>_<eta><option>_<suffix>.root). 'obs' and 'nominal'
 # point to the same file but read different histograms (see
 # load_bkg_histograms).
 BKG_FILE_SUFFIX = OrderedDict([
@@ -292,13 +281,13 @@ def get_signal_systematics(root_path, label, fp_cut="9fp10"):
     return nominal, systematics
 
 
-def build_fpathPred(idirData, versionData, eta, option=""):
+def build_fpathPred(idirData, dataset, eta, option=""):
     """
     Paths of the background prediction files of one eta region, one per key of
     BKG_FILE_SUFFIX.
-    File name: <idirData>JetMET2024_V<versionData>_<eta><option>_<suffix>.root
+    File name: <idirData><dataset>_<eta><option>_<suffix>.root
     """
-    base = idirData + 'JetMET2024_V' + versionData + '_' + eta + option
+    base = os.path.join(idirData, dataset + '_' + eta + option)
     return {key: '{}_{}.root'.format(base, suf)
             for key, suf in BKG_FILE_SUFFIX.items()}
 
@@ -793,7 +782,7 @@ if __name__ == '__main__':
 
     # Directory of the background prediction files. With --splitEta the files of
     # both categories are read from this same directory.
-    idirData = BASE_BKG_DIR + 'data2024_V' + versionData + '__' + regionBckg + '_' + optionlabel + '/' + etaDir + '/'
+    idirData = PATHS.bkg_input_dir(regionBckg, optionlabel, etaDir)
 
     outDataCardsDir = os.path.join(DATACARDS_BASE, signalType, 'shape_{}_{}_{}'.format(regionBckg, etaLabel, optionlabel)) + os.sep
     os.makedirs(outDataCardsDir, exist_ok=True)
@@ -819,7 +808,7 @@ if __name__ == '__main__':
     sigCfg = SIGNAL_CONFIG[signalType]
     fpath = OrderedDict(
         ('{}{}_2024'.format(sigCfg['label'], m),
-         sigCfg['dir'] + sigCfg['pattern'].format(mass=m, ver=sigCfg['version']))
+         PATHS.signal_file(signalType, m))
         for m in sigCfg['masses']
     )
     print("Signal sample: {} ({} mass points)".format(signalType, len(fpath)))
@@ -844,7 +833,7 @@ if __name__ == '__main__':
             sig_nominal, sig_variations = get_signal_systematics(sig_path, sig_label, regionBckg)
 
             # --- BACKGROUND of this eta region (files specific to the eta region) ---
-            fpathPred = build_fpathPred(idirData, versionData, eta, optionlabelForFile)
+            fpathPred = build_fpathPred(idirData, PATHS.bkg_dataset, eta, optionlabelForFile)
             mass_plot = load_bkg_histograms(fpathPred, regionBckg)
             if 'nominal' not in mass_plot:
                 sys.exit("Nominal background prediction not found for {}: {}\n"
